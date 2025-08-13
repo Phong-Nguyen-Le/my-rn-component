@@ -1,57 +1,77 @@
-import { useRouter } from "expo-router";
+import { useNavigationGuard } from "@/hooks/useNavigationGuard";
+import { Href } from "expo-router";
 import React from "react";
 import { Button, StyleSheet, View } from "react-native";
 
 const Home = () => {
-  const router = useRouter();
+  const { navigate, isNavigating } = useNavigationGuard();
+  const handlePress = (path: Href) => {
+    navigate(path);
+  };
 
   return (
     <View style={styles.container}>
       <Button
         title="Go to Freeze Table"
+        disabled={isNavigating}
         onPress={() => {
-          router.push("/1-FreezeTable");
+          handlePress("/1-FreezeTable");
         }}
       />
 
       <Button
         title="Go to Paper View"
+        disabled={isNavigating}
         onPress={() => {
-          router.push("/2-PaperView");
+          handlePress("/2-PaperView");
         }}
       />
 
       <Button
         title="Go to Animated Tabs"
+        disabled={isNavigating}
         onPress={() => {
-          router.push("/1-FreezeTable");
+          handlePress("/1-FreezeTable");
         }}
       />
 
       <Button
         title="Go to Area Chart"
+        disabled={isNavigating}
         onPress={() => {
-          router.push("/3-AreaChart");
+          handlePress("/3-AreaChart");
         }}
       />
 
       <Button
         title="Go to Gesture Chart "
+        disabled={isNavigating}
         onPress={() => {
-          router.push("/4-GestureChart");
+          handlePress("/4-GestureChart");
         }}
       />
+
       <Button
         title="Go to Gesture Chart2"
+        disabled={isNavigating}
         onPress={() => {
-          router.push("/5-GestureChart");
+          handlePress("/5-GestureChart");
         }}
       />
 
       <Button
         title="Go to Gesture Chart with note"
+        disabled={isNavigating}
         onPress={() => {
-          router.push("/6-GestureChartWithNote");
+          handlePress("/6-GestureChartWithNote");
+        }}
+      />
+
+      <Button
+        title="Go to Time Line"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(7-Timeline)/7-Timeline");
         }}
       />
     </View>

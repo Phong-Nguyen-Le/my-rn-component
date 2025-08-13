@@ -1,6 +1,5 @@
 import AreaChart from "@/components/AreaChart.tsx/AreaChart";
 import BarChartComponent from "@/components/BarChart.tsx/BarChartComponent";
-import GestureChart from "@/components/GestureChart.tsx/GestureChartComponent";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -18,10 +17,6 @@ const Chart = () => {
       </View>
 
       <View style={{ height: 10 }}></View>
-
-      <View style={{ backgroundColor: "white" }}>
-        <GestureChart />
-      </View>
     </ScrollView>
   );
 };

@@ -18,15 +18,37 @@ export default function RootLayout() {
   });
 
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
   return (
     <GestureHandlerRootView>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
+        <Stack initialRouteName="(tabs)">
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+          <Stack.Screen
+            name="(7-Timeline)/7-Timeline"
+            options={{
+              headerShown: true,
+              headerBackTitle: "Back",
+              headerBackTitleStyle: {},
+              headerTitle: "Timeline",
+              headerLargeTitle: true,
+            }}
+          />
+
+          <Stack.Screen
+            name="(7-Timeline)/7-TimelineDetail"
+            options={{
+              headerShown: true,
+              headerBackTitle: "Back",
+              headerBackTitleStyle: {},
+              headerTitle: "Timeline Detail",
+              headerLargeTitle: true,
+            }}
+          />
+
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

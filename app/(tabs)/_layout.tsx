@@ -1,6 +1,5 @@
-import { Tabs } from "expo-router";
+import { Tabs, useSegments } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
@@ -10,6 +9,9 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const segment = useSegments();
+  const page = segment[segment.length - 1];
+
   return (
     <Tabs
       screenOptions={{
@@ -17,12 +19,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: "absolute",
-          },
-          default: {},
-        }),
+        tabBarStyle: {},
       }}
     >
       <Tabs.Screen

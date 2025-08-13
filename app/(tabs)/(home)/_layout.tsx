@@ -11,6 +11,10 @@ export default function HomeLayout() {
         name="1-FreezeTable"
         options={{ headerShown: true, headerTitle: "Home" }}
       />
+      {/* <Stack.Screen
+        name="7-Timeline"
+        options={{ headerShown: true, headerTitle: "Timeline" }}
+      /> */}
     </Stack>
   );
 }
