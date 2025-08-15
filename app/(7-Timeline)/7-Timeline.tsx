@@ -1,5 +1,12 @@
 import { useRouter } from "expo-router";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -10,6 +17,7 @@ import {
 } from "react-native";
 import Svg, { Circle, Line } from "react-native-svg";
 
+// Types
 interface TimelineEvent {
   time: string;
   year: string;
@@ -17,21 +25,32 @@ interface TimelineEvent {
   description: string;
 }
 
-interface TimelineDotProps {
-  left: number;
-  top: number;
-  size: number;
-  color: string;
+interface TimelineConfig {
+  padding: number;
+  sectionSpacing: number;
+  spacerWidth: number;
+  itemSpacing: number;
+  lineWidth: number;
+  lineColor: string;
+  dotSize: number;
+  dotColor: string;
+  timeContainerWidth: number;
+  timeContainerHeight: number;
 }
 
-interface TimelineLineProps {
-  left: number;
-  width: number;
-  color: string;
-  height: string | number; // Add height prop to control line length
-  top: number; // Add top prop to control line starting position
-  dashArray?: number[];
-}
+// Constants
+const TIMELINE_CONFIG: TimelineConfig = {
+  padding: 20,
+  sectionSpacing: 30,
+  spacerWidth: 40,
+  itemSpacing: 30,
+  lineWidth: 1,
+  lineColor: "blue",
+  dotSize: 11,
+  dotColor: "#007bff",
+  timeContainerWidth: 50,
+  timeContainerHeight: 20,
+};
 
 const futureEvents: TimelineEvent[] = [
   {
@@ -42,6 +61,7 @@ const futureEvents: TimelineEvent[] = [
       "The 2025 Interim Report will be released on August 23, 2025 at 9:30 AM.",
   },
 ];
+
 const historyEvents: TimelineEvent[] = [
   {
     time: "14:15",
@@ -90,9 +110,7 @@ automation features and discussed expansion into two adjacent verticals.`,
     time: "12:30",
     year: "2025",
     title: "Customer roundtable",
-    description: `Invite-only session with top customers sharing implementation best practices,
-integration patterns, and ROI stories. Notes captured for inclusion in next
-quarter’s case studies and playbooks.`,
+    description: `Invite-only session with top customers sharing implementation best practices`,
   },
   {
     time: "13:10",
@@ -108,7 +126,7 @@ A detailed changelog is available in the trust center.`,
     time: "15:20",
     year: "2025",
     title: "Product launch recap",
-    description: `A comprehensive recap of last week’s launch:
+    description: `A comprehensive recap of last week's launch:
 We saw a 38% uplift in trials within 72 hours, strong social engagement, and
 positive early feedback on performance improvements. Known issues include
 edge cases with legacy configs, which will be addressed in patch 1.0.3.`,
@@ -123,14 +141,16 @@ compensation bands and L&D budget. Recording and summary will be shared in the
   },
 ];
 
-const TimelineDot: React.FC<TimelineDotProps> = ({
-  left,
-  top,
-  size,
-  color,
-}) => {
+// Components
+const TimelineDot: React.FC<{
+  left: number;
+  top: number;
+  size: number;
+  color: string;
+}> = memo(({ left, top, size, color }) => {
   const centerSize = size * 0.55;
   const outerSize = size;
+
   return (
     <Svg
       width={outerSize}
@@ -159,23 +179,22 @@ const TimelineDot: React.FC<TimelineDotProps> = ({
       />
     </Svg>
   );
-};
+});
 
-const TimelineLine: React.FC<TimelineLineProps> = ({
-  left,
-  width,
-  color,
-  height,
-  top,
-  dashArray = [2, 2],
-}) => (
+const VerticalDottedLine: React.FC<{
+  left: number;
+  width: number;
+  color: string;
+  height: number | string;
+  top: number;
+}> = memo(({ left, width, color, height, top }) => (
   <Svg
     height={height}
     width={width}
     style={{
       position: "absolute",
       left: left - width / 2,
-      top: top,
+      top,
       zIndex: 0,
     }}
   >
@@ -186,126 +205,142 @@ const TimelineLine: React.FC<TimelineLineProps> = ({
       y2={height}
       stroke={color}
       strokeWidth={width}
-      strokeDasharray={dashArray}
+      strokeDasharray="2,2"
     />
   </Svg>
-);
+));
 
-// TimelineSection component - moved outside of TimelineComponent for better organization
 const TimelineSection: React.FC<{
   title: string;
   events: TimelineEvent[];
-  config: {
-    itemSpacing: number;
-    lineWidth: number;
-    lineColor: string;
-    dotSize: number;
-    dotColor: string;
-    spacerWidth: number;
-  };
+  config: TimelineConfig;
 }> = ({ title, events, config }) => {
-  // Local ref and state for this section
   const router = useRouter();
   const timeContainerRef = useRef<View>(null);
   const sectionRef = useRef<View>(null);
-  const lastEventRef = useRef<View>(null);
   const [sectionHeight, setSectionHeight] = useState(0);
   const [lastEventHeight, setLastEventHeight] = useState(0);
-  const [lastEventHeight2, setLastEventHeight2] = useState(0);
   const [timeContainerWidth, setTimeContainerWidth] = useState(0);
   const [timeContainerHeight, setTimeContainerHeight] = useState(0);
 
-  // Local functions for positioning
-  const getDotLeftPosition = () => timeContainerWidth + config.spacerWidth / 2;
-  const getDotTopPosition = () => timeContainerHeight / 2;
+  // Memoize expensive calculations
+  const dotLeftPosition = useMemo(
+    () => timeContainerWidth + config.spacerWidth / 2,
+    [timeContainerWidth, config.spacerWidth]
+  );
 
-  // Measure the time container dimensions
+  const dotTopPosition = useMemo(
+    () => timeContainerHeight / 2,
+    [timeContainerHeight]
+  );
+
+  const lineHeight = useMemo(
+    () =>
+      events.length > 1
+        ? sectionHeight - lastEventHeight + timeContainerHeight / 2
+        : "100%",
+    [events.length, sectionHeight, lastEventHeight, timeContainerHeight]
+  );
+
+  // Memoize event handlers
+  const handleEventPress = useCallback(() => {
+    router.push("/(7-Timeline)/7-TimelineDetail");
+  }, [router]);
+
+  const handleEventLayout = useCallback(
+    (index: number, height: number) => {
+      if (index === events.length - 1) {
+        setLastEventHeight(height);
+      }
+    },
+    [events.length]
+  );
+
+  const handleSectionLayout = useCallback((height: number) => {
+    setSectionHeight(height);
+  }, []);
+
+  const handleTimeContainerLayout = useCallback(
+    (x: number, y: number, width: number, height: number) => {
+      setTimeContainerWidth(width);
+      setTimeContainerHeight(height);
+    },
+    []
+  );
+
   useLayoutEffect(() => {
     if (timeContainerRef.current) {
-      timeContainerRef.current.measureInWindow((x, y, width, height) => {
-        setTimeContainerWidth(width);
-        setTimeContainerHeight(height);
-      });
+      timeContainerRef.current.measureInWindow(handleTimeContainerLayout);
     }
-    if (lastEventRef.current && events.length > 0) {
-      lastEventRef.current.measureInWindow((x, y, width, height) => {
-        setLastEventHeight(height);
-      });
-    }
-  }, [setTimeContainerWidth, setTimeContainerHeight, setLastEventHeight]);
+  }, [handleTimeContainerLayout]);
 
-  console.log("lastEventHeight", lastEventHeight);
-  console.log("lastEventHeight2", lastEventHeight2);
+  // Memoize styles that depend on config
+  const eventContainerStyle = useMemo(
+    () => [styles.eventContainer, { paddingBottom: config.itemSpacing }],
+    [config.itemSpacing]
+  );
 
-  const lineHeight = sectionHeight - lastEventHeight2 + timeContainerHeight / 2;
+  const timeContainerStyle = useMemo(
+    () => [styles.timeContainer, { width: config.timeContainerWidth }],
+    [config.timeContainerWidth]
+  );
+
+  const eventTitleStyle = useMemo(
+    () => [
+      styles.eventTitle,
+      {
+        height: timeContainerHeight,
+        lineHeight: timeContainerHeight,
+      },
+    ],
+    [timeContainerHeight]
+  );
 
   return (
     <View
       style={styles.section}
       ref={sectionRef}
-      onLayout={(e) => {
-        const { height } = e.nativeEvent.layout;
-        setSectionHeight(height);
-      }}
+      onLayout={(e) => handleSectionLayout(e.nativeEvent.layout.height)}
     >
-      <TimelineLine
-        left={getDotLeftPosition()}
+      <VerticalDottedLine
+        left={dotLeftPosition}
         width={config.lineWidth}
         color={config.lineColor}
-        height={events.length > 1 ? lineHeight : "100%"}
+        height={lineHeight}
         top={0}
-        dashArray={[2, 2]}
       />
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
+
       <View style={styles.timelineContainer}>
         {events.map((event, index) => (
           <View
             key={index}
-            ref={index === events.length - 1 ? lastEventRef : null}
-            style={[
-              styles.eventContainer,
-              {
-                paddingBottom: config.itemSpacing,
-              },
-            ]}
-            onLayout={(e) => {
-              const { height } = e.nativeEvent.layout;
-              if (index === events.length - 1) {
-                setLastEventHeight2(height);
-              }
-            }}
+            style={eventContainerStyle}
+            onLayout={(e) =>
+              handleEventLayout(index, e.nativeEvent.layout.height)
+            }
           >
             <TimelineDot
-              top={getDotTopPosition()}
-              left={getDotLeftPosition()}
+              top={dotTopPosition}
+              left={dotLeftPosition}
               size={config.dotSize}
               color={config.dotColor}
             />
+
             <View style={styles.eventContent}>
-              <View ref={timeContainerRef} style={styles.timeContainer}>
+              <View ref={timeContainerRef} style={timeContainerStyle}>
                 <Text style={styles.timeText}>{event.time}</Text>
                 <Text style={styles.yearText}>{event.year}</Text>
               </View>
+
               <View style={{ width: config.spacerWidth }} />
-              <TouchableOpacity
-                onPress={() => router.push("/(7-Timeline)/7-TimelineDetail")}
-                style={{ flex: 1 }}
-              >
+
+              <TouchableOpacity onPress={handleEventPress} style={{ flex: 1 }}>
                 <View style={styles.eventDetailContainer}>
-                  <Text
-                    style={[
-                      styles.eventTitle,
-                      {
-                        height: timeContainerHeight,
-                        lineHeight: timeContainerHeight,
-                      },
-                    ]}
-                  >
-                    {event.title}
-                  </Text>
+                  <Text style={eventTitleStyle}>{event.title}</Text>
                   <Text style={styles.eventDescription}>
                     {event.description}
                   </Text>
@@ -319,48 +354,33 @@ const TimelineSection: React.FC<{
   );
 };
 
-const TimelineComponent = () => {
-  // Timeline configuration variables
-  const config = {
-    padding: 20,
-
-    // Spacing
-    sectionSpacing: 30, // Distance between Future and History sections
-
-    spacerWidth: 40, // Distance between time display and content
-    itemSpacing: 30, // Vertical distance between timeline items
-
-    // Line
-    lineWidth: 1, // Width of timeline line
-    lineColor: "red", // Color of timeline line
-
-    // Dots
-    dotSize: 11, // Size of timeline dots
-    dotColor: "#007bff", // Color of timeline dots
-  };
-
+// Memoize the main component to prevent unnecessary re-renders
+const TimelineComponent: React.FC = memo(() => {
   return (
-    <SafeAreaView style={[styles.container]}>
+    <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{}}
       >
-        {/* <TimelineSection title="Future" events={futureEvents} config={config} /> */}
+        <TimelineSection
+          title="Future"
+          events={futureEvents}
+          config={TIMELINE_CONFIG}
+        />
         <TimelineSection
           title="History"
           events={historyEvents}
-          config={config}
+          config={TIMELINE_CONFIG}
         />
       </ScrollView>
     </SafeAreaView>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "white",
   },
   scrollView: {
     flex: 1,
@@ -374,7 +394,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
     backgroundColor: "#e9ecef",
-    paddingHorizontal: 20,
+    paddingHorizontal: 25,
     paddingVertical: 8,
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
@@ -388,6 +408,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     position: "relative",
     minHeight: 40,
+    paddingRight: 10,
   },
   eventDot: {
     position: "absolute",
@@ -399,7 +420,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   timeContainer: {
-    width: 60,
     alignItems: "flex-end",
   },
   timeText: {

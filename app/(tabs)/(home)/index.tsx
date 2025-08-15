@@ -74,6 +74,14 @@ const Home = () => {
           handlePress("/(7-Timeline)/7-Timeline");
         }}
       />
+
+      <Button
+        title="Go to Transition"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(8-transition)/8-Transition");
+        }}
+      />
     </View>
   );
 };
