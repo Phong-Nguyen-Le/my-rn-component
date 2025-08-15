@@ -76,10 +76,18 @@ const Home = () => {
       />
 
       <Button
-        title="Go to Transition"
+        title="8. Go to Transition"
         disabled={isNavigating}
         onPress={() => {
           handlePress("/(8-transition)/8-Transition");
+        }}
+      />
+
+      <Button
+        title="9. Go to Expo Secure Store"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(9-expo-secure-store)/9-expo-secure-store");
         }}
       />
     </View>
