@@ -90,6 +90,22 @@ const Home = () => {
           handlePress("/(9-expo-secure-store)/9-expo-secure-store");
         }}
       />
+
+      <Button
+        title="10. Go to Pull to Refresh"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(10-pull-to-refresh)/10-pull-to-refresh");
+        }}
+      />
+
+      <Button
+        title="Test"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(tabs)/(home)/Test");
+        }}
+      />
     </View>
   );
 };

@@ -48,7 +48,6 @@
     "react-native-svg": "15.11.2",
     "react-native-table-component": "^1.2.2",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5",
     "victory-native": "^41.17.4"
   },
   "devDependencies": {
