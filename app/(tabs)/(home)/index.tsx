@@ -106,6 +106,30 @@ const Home = () => {
           handlePress("/(tabs)/(home)/Test");
         }}
       />
+
+      <Button
+        title="Heat Map"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(tabs)/(home)/7-Headmap");
+        }}
+      />
+
+      {/* <Button
+        title="FLV"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(tabs)/(home)/8-Flv");
+        }}
+      /> */}
+
+      <Button
+        title="Stock Chart"
+        disabled={isNavigating}
+        onPress={() => {
+          handlePress("/(tabs)/(home)/9-StockChart");
+        }}
+      />
     </View>
   );
 };
